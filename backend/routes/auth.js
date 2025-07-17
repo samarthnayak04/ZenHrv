@@ -38,10 +38,18 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-    res.json({
-      token,
-      user: { id: user._id, username: user.username, email: user.email },
-    });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "Lax", // Use "None" if you're testing across domains with HTTPS
+        secure: false, // Set true if using HTTPS (for production)
+        maxAge: 60 * 60 * 1000, // 1 hour
+      })
+      .status(200)
+      .json({
+        message: "Login successful",
+        user: { id: user._id, username: user.username, email: user.email },
+      });
   } catch (err) {
     res.status(500).json({ message: "Something went wrong" });
   }
