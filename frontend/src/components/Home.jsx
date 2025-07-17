@@ -1,17 +1,33 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./styles/Home.css";
+import Image from "/applogo.avif";
 
-export default function Home() {
+function Home() {
+  const navigate = useNavigate();
+
+  const handleNext = () => {
+    navigate("/register");
+  };
+
   return (
-    <div className="container text-center mt-5">
-      <h1 className="display-4">Welcome to MindTrack</h1>
-      <p className="lead">Your personal HRV-based meditation assistant</p>
-      <Link to="/signup" className="btn btn-primary m-2">
-        Sign Up
-      </Link>
-      <Link to="/login" className="btn btn-outline-primary m-2">
-        Login
-      </Link>
+    <div className="home-container">
+      <div className="home-card shadow-lg rounded-4 text-center">
+        <img src={Image} alt="Meditation" className="home-img mb-4" />
+        <h2 className="fw-bold">WELCOME</h2>
+        <p className="text-muted">
+          Meditation is the key to <br /> unlocking the door to peace
+        </p>
+        <button
+          className="btn btn-primary btn-lg mt-4 rounded-pill px-5 next-button"
+          onClick={handleNext}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
+
+export default Home;
