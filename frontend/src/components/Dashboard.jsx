@@ -1,34 +1,46 @@
-import React from "react";
-import axios from "axios";
+// src/components/Dashboard.jsx
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./styles/dashboard.css";
+// import meditationAudio from "../assets/meditation.mp3";
 
-export default function Dashboard() {
+const Dashboard = () => {
+  const [duration, setDuration] = useState("");
+  const [audio] = useState(new Audio(meditationAudio));
   const navigate = useNavigate();
 
-  const startSession = async () => {
-    // Simulate dummy data – later integrate your HRV script here
-    const sessionData = {
-      duration: 180,
-      rmssdValues: [10.2, 12.5, 11.9],
-      sdnnValues: [14.7, 13.8, 15.2],
-      conditions: ["calm", "stressed", "calm"],
-      actualCondition: 0,
-    };
-
-    try {
-      await axios.post("http://localhost:5000/api/session", sessionData, {
-        withCredentials: true,
-      });
-      navigate("/graph", { state: sessionData }); // send to Graph page
-    } catch (err) {
-      alert("Failed to start session");
+  const handleStartSession = () => {
+    if (!duration) {
+      alert("Please enter a duration in minutes.");
+      return;
     }
+
+    audio.loop = true;
+    audio.play();
+
+    // Pass duration to session page (via state or global context ideally)
+    navigate("/session", { state: { duration } });
   };
 
   return (
-    <div>
-      <h2>Welcome to Meditation Dashboard</h2>
-      <button onClick={startSession}>Start Meditation Session</button>
+    <div className="dashboard-container">
+      <h2>Welcome Back 🌿</h2>
+      <p>Enter your desired meditation duration below</p>
+      <input
+        type="number"
+        placeholder="Duration in minutes"
+        className="form-control mb-3 duration-input"
+        value={duration}
+        onChange={(e) => setDuration(e.target.value)}
+      />
+      <button
+        className="btn btn-success start-btn"
+        onClick={handleStartSession}
+      >
+        Start Meditation
+      </button>
     </div>
   );
-}
+};
+
+export default Dashboard;
