@@ -10,7 +10,7 @@ html {
 .home-container {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #c2e9fb, #a1c4fd);
+  background: linear-gradient(160deg, #c2e9fb, #a1c4fd);
   display: flex;
   justify-content: center;
   align-items: center;

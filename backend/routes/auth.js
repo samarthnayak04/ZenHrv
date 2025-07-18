@@ -41,8 +41,8 @@ router.post("/login", async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,
-        sameSite: "Lax", // Use "None" if you're testing across domains with HTTPS
-        secure: false, // Set true if using HTTPS (for production)
+        sameSite: "Lax",
+        secure: false,
         maxAge: 60 * 60 * 1000, // 1 hour
       })
       .status(200)
