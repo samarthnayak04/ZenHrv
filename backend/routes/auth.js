@@ -16,8 +16,19 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    res.status(201).json({ message: "User registered successfully" });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "Lax",
+        secure: false, // Set to true if using HTTPS
+        maxAge: 60 * 60 * 1000,
+      })
+      .status(201)
+      .json({ message: "User registered successfully" });
   } catch (err) {
     res.status(500).json({ message: "Something went wrong" });
   }
