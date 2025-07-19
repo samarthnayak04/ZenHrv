@@ -138,13 +138,11 @@ if __name__ == '__main__':
         duration_minutes = int(sys.argv[1])  # Receive duration from Node
         total_duration = duration_minutes * 60
         # print(f"Starting meditation session for {duration_minutes} minutes.")
-        monitor_meditation_session(total_duration)
-        # PlotGraph()
-        
+        rmssd_values, sdnn_values, conditions = monitor_meditation_session(total_duration)
         result = {
-            "rmssdValues": RMSSD,
-            "sdnnValues": SDNN,
-            "conditions": condition
+            "rmssdValues": rmssd_values,
+            "sdnnValues": sdnn_values,
+            "conditions": conditions   # each 0 (calm) or 1 (stress)
         }
         print(json.dumps(result))  # Send JSON back to Node
 
