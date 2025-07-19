@@ -5,7 +5,7 @@ const sessionSchema = new mongoose.Schema({
   duration: { type: Number, required: true }, // in seconds
   rmssdValues: [Number],
   sdnnValues: [Number],
-  conditions: [String], // predicted conditions (e.g., ["calm", "stressed"])
+  conditions: [Number], // predicted conditions (e.g., ["calm", "stressed"])
 
   createdAt: { type: Date, default: Date.now },
 });
