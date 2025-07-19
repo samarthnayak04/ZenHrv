@@ -20,8 +20,8 @@ function Signup() {
       await axios.post("http://localhost:5000/api/auth/register", form, {
         withCredentials: true,
       });
-      alert("Signup successful!");
-      navigate("/login");
+      // alert("Signup successful!");
+      navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Signup failed");
     }
