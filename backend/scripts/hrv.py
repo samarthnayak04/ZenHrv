@@ -30,7 +30,7 @@ def capture_ppg_signal(duration, fps=30):
         cv2.imshow('PPG Signal Capture', frame)
         elapsed_time = time.time() - start_time
         remaining_time = duration - elapsed_time
-        print(f"Remaining time: {max(0, remaining_time):.1f} seconds", end='\r')
+        # print(f"Remaining time: {max(0, remaining_time):.1f} seconds", end='\r')
         frame_count += 1
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -69,7 +69,7 @@ def calculate_hrv_metrics(ppg_signal, fs=30):
     rr_intervals = np.diff(peaks) / fs
     heart_rate = 60 / rr_intervals
     hr_mean = np.mean(heart_rate)
-    print(f"Mean Heart Rate: {hr_mean:.2f} BPM")
+    # print(f"Mean Heart Rate: {hr_mean:.2f} BPM")
     if len(peaks) < 2:
         raise ValueError("Not enough peaks detected to calculate HRV metrics.")
     ibi = rr_intervals
@@ -77,21 +77,22 @@ def calculate_hrv_metrics(ppg_signal, fs=30):
     sdnn = np.std(ibi)
     return rmssd*1000, sdnn*1000
 
-MODEL_PATH = r'backend\scripts\NewrfWesad.pkl'  # Path to your joblib model
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(CURRENT_DIR, "NewrfWesad.pkl")
 loaded_model = joblib.load(MODEL_PATH)
 
 def play_voice_prompt_stress():
     engine = pyttsx3.init()
     engine.setProperty('rate', 145)
     engine.setProperty('volume', 0.8)
-    engine.say("Noticing multiple thoughts. Let's pause for a mindful breath. Inhale... and exhale slowly.")
+    engine.say("Noticing multiple thoughts.Inhale... and exhale slowly.")
     engine.runAndWait()
 
 def play_voice_prompt_calm():
     engine = pyttsx3.init()
     engine.setProperty('rate', 145)
     engine.setProperty('volume', 0.8)
-    engine.say("Great, keep up the calm breathing. Stay present and relaxed.")
+    engine.say("Great, keep up the calm breathing.")
     engine.runAndWait()
 
 
@@ -100,7 +101,7 @@ def provide_feedback(rmssd, sdnn):
     input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
     prediction = loaded_model.predict(input_data)[0]
     if prediction == 1:
-        print(f"Stress detecte! RMSSD ({rmssd:.2f} ms).")
+        # print(f"Stress detecte! RMSSD ({rmssd:.2f} ms).")
         play_voice_prompt_stress()
         return 1
     else:
@@ -112,14 +113,14 @@ def monitor_meditation_session(total_duration):
     intervals = total_duration // interval
     conditions, rmssd_values, sdnn_values = [], [], []
     for i in range(intervals):
-        print(f"\nStarting interval {i + 1} of {intervals}")
+        # print(f"\nStarting interval {i + 1} of {intervals}")
         frames = capture_ppg_signal(duration=interval)
         ppg_signal = apply_pos_algorithm(frames)
         f_ppg_signal = preprocess_signal(ppg_signal)
         rmssd, sdnn = calculate_hrv_metrics(f_ppg_signal)
         rmssd_values.append(rmssd)
         sdnn_values.append(sdnn)
-        print(f"Interval {i + 1}: RMSSD = {rmssd:.4f}, SDNN = {sdnn:.4f}")
+        # print(f"Interval {i + 1}: RMSSD = {rmssd:.4f}, SDNN = {sdnn:.4f}")
         condition = provide_feedback(rmssd, sdnn)
         conditions.append(condition)
         time.sleep(1)
