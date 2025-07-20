@@ -18,9 +18,64 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+// router.post("/test", (req, res) => {
+//   console.log(">> Body in /test route:", req.body);
+//   res.json({ received: req.body });
+// });
 
-// POST /api/session → save HRV session
-router.post("/", authenticateToken, async (req, res) => {
+router.post("/process", authenticateToken, async (req, res) => {
+  const { duration } = req.body;
+  console.log("req.body received:", req.body);
+  if (!duration) {
+    return res.status(400).json({ error: "Duration required" });
+  }
+
+  const pythonScriptPath = path.join(__dirname, "../scripts/hrv.py");
+  console.log("Running script:", pythonScriptPath, "with duration:", duration);
+
+  const pythonProcess = spawn("python", [
+    pythonScriptPath,
+    duration.toString(),
+  ]);
+
+  let dataBuffer = "";
+  let errorBuffer = "";
+
+  pythonProcess.stdout.on("data", (data) => {
+    dataBuffer += data.toString();
+  });
+
+  pythonProcess.stderr.on("data", (data) => {
+    console.error("PYTHON STDERR:", data.toString());
+    errorBuffer += data.toString();
+  });
+
+  pythonProcess.on("close", (code) => {
+    if (code !== 0) {
+      console.error("Python script error:", errorBuffer);
+      return res.status(500).json({ error: "Python script failed" });
+    }
+
+    try {
+      const parsed = JSON.parse(dataBuffer);
+      res.json(parsed);
+    } catch (err) {
+      console.error("Failed to parse Python output:", err);
+      res.status(500).json({ error: "Invalid script output" });
+    }
+  });
+});
+
+// router.get("/result", authenticateToken, (req, res) => {
+//   if (!sessionData) return res.status(202).json({ message: "Processing..." });
+
+//   const result = sessionData;
+//   sessionData = null; // reset for next session
+//   res.json(result);
+// });
+
+// ✅ Save to MongoDB
+router.post("/save", authenticateToken, async (req, res) => {
   try {
     const { duration, rmssdValues, sdnnValues, conditions } = req.body;
 
@@ -38,44 +93,6 @@ router.post("/", authenticateToken, async (req, res) => {
     console.error("Error saving session:", err);
     res.status(500).json({ error: "Server error" });
   }
-});
-
-router.post("/process", authenticateToken, async (req, res) => {
-  const { duration } = req.body;
-
-  if (!duration) {
-    return res.status(400).json({ error: "Duration required" });
-  }
-
-  const pythonScriptPath = path.join(__dirname, "../scripts/hrv.py");
-
-  const pythonProcess = spawn("python", [pythonScriptPath, duration]);
-
-  let dataBuffer = "";
-  let errorBuffer = "";
-
-  pythonProcess.stdout.on("data", (data) => {
-    dataBuffer += data.toString();
-  });
-
-  pythonProcess.stderr.on("data", (data) => {
-    errorBuffer += data.toString();
-  });
-
-  pythonProcess.on("close", (code) => {
-    if (code !== 0) {
-      console.error("Python script error:", errorBuffer);
-      return res.status(500).json({ error: "Python script failed" });
-    }
-
-    try {
-      const parsed = JSON.parse(dataBuffer); // data from Python must be JSON string
-      res.json(parsed);
-    } catch (err) {
-      console.error("Failed to parse Python output:", err);
-      res.status(500).json({ error: "Invalid script output" });
-    }
-  });
 });
 
 module.exports = router;
