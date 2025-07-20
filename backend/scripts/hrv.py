@@ -75,7 +75,7 @@ def calculate_hrv_metrics(ppg_signal, fs=30):
     ibi = rr_intervals
     rmssd = np.sqrt(np.mean(np.square(np.diff(ibi))))
     sdnn = np.std(ibi)
-    return rmssd, sdnn
+    return rmssd*1000, sdnn*1000
 
 MODEL_PATH = r'backend\scripts\NewrfWesad.pkl'  # Path to your joblib model
 loaded_model = joblib.load(MODEL_PATH)
@@ -96,8 +96,7 @@ def play_voice_prompt_calm():
 
 
 def provide_feedback(rmssd, sdnn):
-    rmssd = rmssd * 1000  # Convert to ms
-    sdnn = sdnn * 1000
+    
     input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
     prediction = loaded_model.predict(input_data)[0]
     if prediction == 1:
@@ -107,11 +106,6 @@ def provide_feedback(rmssd, sdnn):
     else:
         play_voice_prompt_calm()
         return 0
-
-
-
-headers = ["RMSSD", "SDNN", "condition"]
-
 
 def monitor_meditation_session(total_duration):
     interval = 30  # Feedback interval in seconds
@@ -129,7 +123,8 @@ def monitor_meditation_session(total_duration):
         condition = provide_feedback(rmssd, sdnn)
         conditions.append(condition)
         time.sleep(1)
-    print("Meditation session complete. Thank you for participating!")
+    # print("Meditation session complete. Thank you for participating!")
+    return rmssd_values,sdnn_values,conditions
    
     
 
