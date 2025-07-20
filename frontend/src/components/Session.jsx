@@ -13,7 +13,9 @@ const Session = () => {
   const [audio] = useState(new Audio(meditationAudio));
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Format time to mm:ss
+  // Store the Python process promise
+  const [processPromise, setProcessPromise] = useState(null);
+
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60)
       .toString()
@@ -26,12 +28,20 @@ const Session = () => {
     audio.loop = true;
     audio.play();
 
+    // 🔁 Start the Python backend process once
+    const promise = axios.post("/api/session/process", {
+      duration: durationMinutes,
+      withCredentials: true,
+    });
+    setProcessPromise(promise);
+
+    // Start meditation countdown timer
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
           audio.pause();
-          handleSessionComplete();
+          handleSessionComplete(); // trigger fetch
           return 0;
         }
         return prev - 1;
@@ -48,27 +58,23 @@ const Session = () => {
   const handleSessionComplete = async () => {
     setIsProcessing(true);
     try {
-      const { data } = await axios.post("/api/session/process", {
-        duration: durationMinutes,
-      });
+      const { data } = await processPromise;
 
       if (data && data.rmssdValues) {
-        // Save to DB
-        await axios.post("/api/session", {
+        await axios.post("/api/session/save", {
           duration: durationMinutes,
           rmssdValues: data.rmssdValues,
           sdnnValues: data.sdnnValues,
           conditions: data.conditions,
         });
 
-        // Navigate to Graph with results
         navigate("/graph", { state: data });
       } else {
-        alert("Session completed, but no HRV data received.");
+        alert("Session complete, but no HRV data received.");
       }
     } catch (err) {
-      console.error("Session error:", err);
-      alert("Something went wrong while processing your session.");
+      console.error("Session processing error:", err);
+      alert("Something went wrong during processing.");
     } finally {
       setIsProcessing(false);
     }
