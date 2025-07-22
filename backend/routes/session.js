@@ -58,6 +58,7 @@ router.post("/process", authenticateToken, async (req, res) => {
 
     try {
       const parsed = JSON.parse(dataBuffer);
+      // console.log("✅ Python output parsed:", parsed);
       res.json(parsed);
     } catch (err) {
       console.error("Failed to parse Python output:", err);

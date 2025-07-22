@@ -15,39 +15,32 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # --- Video Capture (ROI) ---
 def capture_ppg_signal(duration, fps=30):
     roi = (150, 100, 490, 400)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     # cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise Exception("Webcam could not be accessed")
 
-    cv2.namedWindow("PPG Signal Capture", cv2.WINDOW_NORMAL)  # Ensures only one window
     frames = []
     total_frames = duration * fps
     frame_count = 0
     start_time = time.time()
-
     while frame_count < total_frames:
         ret, frame = cap.read()
         if not ret:
             break
-
         cropped_frame = frame[roi[1]:roi[3], roi[0]:roi[2]]
         frames.append(cropped_frame)
-
-        # Draw ROI and display frame
         cv2.rectangle(frame, (roi[0], roi[1]), (roi[2], roi[3]), (255, 0, 0), 2)
-        cv2.imshow("PPG Signal Capture", frame)
-
+        cv2.imshow('PPG Signal Capture', frame)
+        elapsed_time = time.time() - start_time
+        remaining_time = duration - elapsed_time
+        # print(f"Remaining time: {max(0, remaining_time):.1f} seconds", end='\r')
         frame_count += 1
-
-        # Press 'q' to break manually
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
     cap.release()
     cv2.destroyAllWindows()
     return frames
-
 
 # --- POS Algorithm ---
 def apply_pos_algorithm(frames):
