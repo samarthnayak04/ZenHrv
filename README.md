@@ -158,5 +158,3 @@ This project is licensed under the MIT License.
 - **GitHub**: @samarthnayak04
 - **Email**: samarth.nayak@example.com (replace with your actual email)
 - **Issues**: Report bugs or suggest features via GitHub Issues
-
----
