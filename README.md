@@ -9,19 +9,14 @@
 
 - **🎥 Webcam-Based HRV Monitoring**\
   Captures facial PPG signals using OpenCV for non-invasive, real-time analysis.
-
 - **📊 HRV Metrics Analysis**\
   Computes RMSSD and SDNN to evaluate stress and physiological stability.
-
 - **🤖 AI-Powered Stress Detection**\
   Utilizes a pre-trained Random Forest model to identify stress states during meditation.
-
 - **🎶 Immersive Meditation Experience**\
   Plays soothing background music to guide breathing and focus.
-
 - **📈 Interactive Visualizations**\
   Displays RMSSD and SDNN trends with stress markers via Chart.js.
-
 - **🔉 Voice Feedback**\
   Delivers spoken session summaries for an engaging, hands-free experience.
 
@@ -43,7 +38,6 @@
 ```plaintext
 ZenHRV/
 ├── backend/                   # Backend API (Node.js, Express)
-│   ├── controllers/           # Route handlers
 │   ├── models/                # Database models
 │   ├── routes/                # API routes
 │   ├── scripts/               # HRV analysis and signal processing
@@ -62,8 +56,6 @@ ZenHRV/
 ├── .gitignore                 # Ignored files
 ├── README.md                  # Project documentation
 ```
-
----
 
 ## 🔧 Installation & Setup
 
@@ -101,7 +93,7 @@ ZenHRV/
 
 5. **Access the Application**
 
-   - Frontend: Open `http://localhost:3000` in your browser.
+   - Frontend: Open `http://localhost:5173` in your browser.
    - Backend API: Runs on `http://localhost:5000` by default.
 
 ---
@@ -119,10 +111,6 @@ ZenHRV/
    - Post-session, explore interactive charts showing RMSSD and SDNN trends with stress markers.
    - Listen to optional voice feedback summarizing your calmness level.
 
-3. **Enhance Mindfulness**
-
-   - Use motivational insights to refine your meditation practice.
-
 ---
 
 ## 🎯 Future Roadmap
@@ -137,8 +125,6 @@ ZenHRV/
 
 ## 🤝 Contribution
 
-We welcome contributions to improve **ZenHRV**! Follow these steps:
-
 1. Fork the project.
 2. Create a feature branch (`git checkout -b feature/your-feature-name`).
 3. Commit changes (`git commit -m "Add your feature"`).
@@ -152,9 +138,3 @@ We welcome contributions to improve **ZenHRV**! Follow these steps:
 This project is licensed under the MIT License.
 
 ---
-
-## 📩 Contact
-
-- **GitHub**: @samarthnayak04
-- **Email**: samarth.nayak@example.com (replace with your actual email)
-- **Issues**: Report bugs or suggest features via GitHub Issues
