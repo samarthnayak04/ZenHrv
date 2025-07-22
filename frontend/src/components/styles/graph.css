@@ -1,0 +1,63 @@
+.graph-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #c2e9fb, #a1c4fd);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.graph-card {
+  background-color: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}
+
+.graph-title {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.graph-status {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.graph-status.stress {
+  color: red;
+}
+
+.graph-status.calm {
+  color: green;
+}
+
+.graph-quote {
+  margin-top: 30px;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.graph-navigation {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.start-session-btn {
+  background-color: #4caf50;
+  color: white;
+  font-size: 14px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.start-session-btn:hover {
+  background-color: #388e3c;
+}
