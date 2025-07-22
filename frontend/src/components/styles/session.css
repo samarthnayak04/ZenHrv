@@ -65,3 +65,17 @@ p {
     opacity: 1;
   }
 }
+/* .camera-preview {
+  margin-top: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 100%;
+  aspect-ratio: 16/9;
+}
+
+video {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+} */
