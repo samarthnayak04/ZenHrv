@@ -33,7 +33,7 @@ router.post("/process", authenticateToken, async (req, res) => {
   const pythonScriptPath = path.join(__dirname, "../scripts/hrv.py");
   console.log("Running script:", pythonScriptPath, "with duration:", duration);
 
-  const pythonProcess = spawn("python", [
+  const pythonProcess = spawn("python3", [
     pythonScriptPath,
     duration.toString(),
   ]);
