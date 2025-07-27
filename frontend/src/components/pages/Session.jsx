@@ -40,7 +40,7 @@ const Session = () => {
     setIsProcessing(true);
     axios
       .post(
-        "https://zenhrv.onrender.com/api/session/process",
+        "/api/session/process",
         { duration: durationMinutes },
         { withCredentials: true }
       )

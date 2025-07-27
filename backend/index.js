@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 app.use(
   cors({
-    origin: "https://zenhrv-frontend.vercel.app", // frontend
+    origin: "http://localhost:5173", // frontend
     credentials: true,
   })
 );

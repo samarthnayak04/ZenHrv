@@ -4,3 +4,4 @@ pandas
 scipy
 joblib
 pyttsx3
+scikit-learn==1.5.1
