@@ -13,7 +13,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/auth/login", form, {
+      await axios.post("/api/auth/login", form, {
         withCredentials: true,
       });
       // alert("Login successful!");

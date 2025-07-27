@@ -40,7 +40,7 @@ const Session = () => {
     setIsProcessing(true);
     axios
       .post(
-        "http://localhost:5000/api/session/process",
+        "/api/session/process",
         { duration: durationMinutes },
         { withCredentials: true }
       )
