@@ -1,108 +1,125 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import meditationAudio from "/hrv audio.mp3";
 import axios from "axios";
 import "../styles/session.css";
 
-const computeBufferTime = (baseSeconds) => {
-  const extraSeconds = Math.floor(baseSeconds / 30) * 10;
-  return baseSeconds + extraSeconds;
-};
-
 const Session = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const durationMinutes = location.state?.duration || 5;
-
-  const baseSeconds = durationMinutes * 60;
-  const totalSeconds = computeBufferTime(baseSeconds);
+  const durationMinutes = location.state?.duration || 1;
+  const totalSeconds = durationMinutes * 60;
 
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
-  const [audio] = useState(new Audio(meditationAudio));
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [dataReady, setDataReady] = useState(null);
+  const [frameBuffer, setFrameBuffer] = useState([]);
+  const [sessionData, setSessionData] = useState({
+    rmssdValues: [],
+    sdnnValues: [],
+    conditions: [],
+  });
+  const [isProcessing, setIsProcessing] = useState(true);
 
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [audio] = useState(new Audio(meditationAudio));
+
+  // Capture 1 frame
+  const captureFrame = () => {
+    const ctx = canvasRef.current.getContext("2d");
+    ctx.drawImage(videoRef.current, 150, 100, 340, 300, 0, 0, 340, 300);
+    const pixels = ctx.getImageData(0, 0, 340, 300).data;
+    const rgbFrame = [];
+    for (let i = 0; i < pixels.length; i += 4) {
+      rgbFrame.push([pixels[i], pixels[i + 1], pixels[i + 2]]);
+    }
+    return rgbFrame;
   };
 
+  // Send 30s worth of frames
+  const sendBatch = async () => {
+    if (frameBuffer.length === 0) return;
+    const allFrames = frameBuffer.flat();
+    try {
+      const res = await axios.post("/api/session/process", allFrames, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
+      const { rmssdValues, sdnnValues, conditions } = res.data;
+      setSessionData((prev) => ({
+        rmssdValues: [...prev.rmssdValues, ...rmssdValues],
+        sdnnValues: [...prev.sdnnValues, ...sdnnValues],
+        conditions: [...prev.conditions, ...conditions],
+      }));
+    } catch (err) {
+      console.error("❌ Error sending batch:", err);
+    } finally {
+      setFrameBuffer([]); // Clear buffer
+    }
+  };
+
+  // Main session loop
   useEffect(() => {
     audio.loop = true;
-    audio.play().catch((err) => {
-      console.warn("Autoplay failed:", err);
-    });
+    audio.play().catch(() => console.warn("Autoplay blocked"));
 
-    // 🔁 Start the Python backend process immediately
-    setIsProcessing(true);
-    axios
-      .post(
-        "/api/session/process",
-        { duration: durationMinutes },
-        { withCredentials: true }
-      )
-      .then((response) => {
-        console.log("✅ Received from /process:", response.data);
-        setDataReady(response.data);
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
       })
-      .catch((err) => {
-        console.error("❌ Error from /process:", err);
-        alert("Error running HRV session.");
-      });
+      .catch((err) => console.error("Camera access error:", err));
 
-    // ⏳ Start meditation countdown (with buffer)
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setTimeout(() => audio.pause(), 500); // slight delay
-          return 0;
+    let secondCounter = 0;
+
+    const frameInterval = setInterval(() => {
+      const frame = captureFrame();
+      setFrameBuffer((prev) => [...prev, frame]);
+    }, 1000 / 25); // ~25 FPS
+
+    const timerInterval = setInterval(() => {
+      secondCounter += 1;
+      setTimeLeft((prev) => prev - 1);
+
+      if (secondCounter % 30 === 0) {
+        sendBatch(); // Send every 30s
+      }
+
+      if (secondCounter >= totalSeconds) {
+        clearInterval(timerInterval);
+        clearInterval(frameInterval);
+        sendBatch().then(() => handleSessionComplete());
+        audio.pause();
+        audio.currentTime = 0;
+        if (videoRef.current?.srcObject) {
+          videoRef.current.srcObject
+            .getTracks()
+            .forEach((track) => track.stop());
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
 
     return () => {
-      clearInterval(timer);
-      audio.currentTime = 0;
+      clearInterval(frameInterval);
+      clearInterval(timerInterval);
     };
   }, []);
 
-  // ✅ Trigger session complete only when both time and data are ready
-  useEffect(() => {
-    if (timeLeft === 0 && dataReady) {
-      handleSessionComplete();
-    }
-  }, [timeLeft, dataReady]);
-
   const handleSessionComplete = async () => {
     try {
-      const { rmssdValues, sdnnValues, conditions } = dataReady;
-
-      if (rmssdValues) {
-        const saveRes = await axios.post(
-          "http://localhost:5000/api/session/save",
-          {
-            duration: durationMinutes,
-            rmssdValues,
-            sdnnValues,
-            conditions,
-          },
-          { withCredentials: true }
-        );
-
-        console.log("✅ Saved to DB:", saveRes.data);
-        navigate("/graph", { state: dataReady });
-      } else {
-        console.warn("⚠️ No HRV data received");
-        alert("Session complete, but no HRV data received.");
-      }
+      const res = await axios.post(
+        "/api/session/save",
+        {
+          duration: durationMinutes,
+          ...sessionData,
+        },
+        { withCredentials: true }
+      );
+      console.log("✅ Session saved:", res.data);
+      navigate("/graph", { state: sessionData });
     } catch (err) {
-      console.error("❌ Error saving session:", err);
-      alert("Something went wrong while saving the session.");
+      console.error("❌ Save error:", err);
+      alert("Session complete, but save failed.");
     } finally {
       setIsProcessing(false);
     }
@@ -112,19 +129,23 @@ const Session = () => {
     <div className="session-wrapper">
       <div className="session-box">
         <h2>🧘 Meditation in Progress</h2>
-        <p className="timer">{formatTime(timeLeft)}</p>
+        <p className="timer">
+          {String(Math.floor(timeLeft / 60)).padStart(2, "0")}:
+          {String(timeLeft % 60).padStart(2, "0")}
+        </p>
         <p>Relax and let your mind settle...</p>
-
         {isProcessing && (
-          <div className="processing-box mt-4">
-            <p>Processing your HRV session... ⏳</p>
-          </div>
+          <div className="processing-box mt-4">Processing your HRV... ⏳</div>
         )}
-
-        {timeLeft === 0 && !dataReady && (
-          <p className="processing-box mt-2">Finalizing your HRV data... 🧠</p>
-        )}
-
+        <div className="camera-preview">
+          <video ref={videoRef} autoPlay muted playsInline />
+        </div>
+        <canvas
+          ref={canvasRef}
+          width="340"
+          height="300"
+          style={{ display: "none" }}
+        ></canvas>
         <div className="pulse-animation"></div>
       </div>
     </div>
